@@ -68,10 +68,20 @@ public class StatsHelperService {
 
     public void hit(HttpServletRequest request) {
         try {
+            String ip = null;
+            String xff = request.getHeader("X-Forwarded-For");
+            if (xff != null && !xff.isBlank()) {
+                ip = xff.split(",")[0].trim();
+            }
+
+            if (ip == null || ip.isEmpty()) {
+                ip = request.getRemoteAddr();
+            }
+
             statsClient.hit(new EndpointHitDto(
                     appName,
                     request.getRequestURI(),
-                    request.getRemoteAddr(),
+                    ip,
                     LocalDateTime.now()
             ));
         } catch (Exception e) {
