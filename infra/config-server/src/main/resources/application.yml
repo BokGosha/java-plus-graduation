@@ -1,3 +1,6 @@
+server:
+  port: 8888
+
 spring:
   application:
     name: config-server
@@ -9,5 +12,3 @@ spring:
         native:
           search-locations:
             - file:./infra/config-repo
-            - file:./infra/config-repo/stats-service
-            - file:./infra/config-repo/main-service
