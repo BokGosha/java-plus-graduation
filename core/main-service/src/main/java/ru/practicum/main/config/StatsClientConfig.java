@@ -9,12 +9,12 @@ import ru.practicum.stats.client.StatsClient;
 public class StatsClientConfig {
 
     @Bean
-    public StatsClient statsClient(@Value("${stats-server.url:http://localhost:9090}") String baseUrl) {
-        return new StatsClient(baseUrl);
+    public StatsClient statsClient() {
+        return new StatsClient();
     }
 
     @Bean
-    public String appName(@Value("${spring.application.name:ewm-main-service}") String appName) {
+    public String appName(@Value("${spring.application.name:main-service}") String appName) {
         return appName;
     }
 }
