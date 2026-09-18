@@ -40,7 +40,12 @@ public class StatsHelperService {
                     .min(LocalDateTime::compareTo)
                     .orElse(DEFAULT_START);
 
-            List<ViewStatsDto> stats = statsClient.getStats(start, LocalDateTime.now(), uris, true);
+            List<ViewStatsDto> stats = statsClient.getStats(
+                    start,
+                    LocalDateTime.now().plusSeconds(1).withNano(0),
+                    uris,
+                    true
+            );
 
             Map<String, Long> hitsByUri = stats.stream()
                     .collect(Collectors.toMap(ViewStatsDto::uri, ViewStatsDto::hits, (first, second) -> first));
@@ -82,7 +87,7 @@ public class StatsHelperService {
                     appName,
                     request.getRequestURI(),
                     ip,
-                    LocalDateTime.now()
+                    LocalDateTime.now().withNano(0)
             ));
         } catch (Exception e) {
             log.warn("Cannot save stats hit for uri={}", request.getRequestURI(), e);
