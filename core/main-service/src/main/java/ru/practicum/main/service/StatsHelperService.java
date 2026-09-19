@@ -40,7 +40,12 @@ public class StatsHelperService {
                     .min(LocalDateTime::compareTo)
                     .orElse(DEFAULT_START);
 
-            List<ViewStatsDto> stats = statsClient.getStats(start, LocalDateTime.now(), uris, true);
+            List<ViewStatsDto> stats = statsClient.getStats(
+                    start,
+                    LocalDateTime.now().plusSeconds(1).withNano(0),
+                    uris,
+                    true
+            );
 
             Map<String, Long> hitsByUri = stats.stream()
                     .collect(Collectors.toMap(ViewStatsDto::uri, ViewStatsDto::hits, (first, second) -> first));
@@ -68,11 +73,21 @@ public class StatsHelperService {
 
     public void hit(HttpServletRequest request) {
         try {
+            String ip = null;
+            String xff = request.getHeader("X-Forwarded-For");
+            if (xff != null && !xff.isBlank()) {
+                ip = xff.split(",")[0].trim();
+            }
+
+            if (ip == null || ip.isEmpty()) {
+                ip = request.getRemoteAddr();
+            }
+
             statsClient.hit(new EndpointHitDto(
                     appName,
                     request.getRequestURI(),
-                    request.getRemoteAddr(),
-                    LocalDateTime.now()
+                    ip,
+                    LocalDateTime.now().withNano(0)
             ));
         } catch (Exception e) {
             log.warn("Cannot save stats hit for uri={}", request.getRequestURI(), e);

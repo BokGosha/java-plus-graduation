@@ -7,16 +7,14 @@ services:
       stats-db:
         condition: service_healthy
     environment:
-      POSTGRES_HOST: stats-db
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: stats
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
 
   stats-db:
     image: postgres:17
     ports:
-      - "6541:5432"
+      - "5433:5432"
     environment:
       POSTGRES_DB: stats
       POSTGRES_USER: postgres
@@ -32,7 +30,7 @@ services:
   main-db:
     image: postgres:17
     ports:
-      - "6542:5432"
+      - "5434:5432"
     environment:
       POSTGRES_DB: main
       POSTGRES_USER: postgres
@@ -48,7 +46,7 @@ services:
   main-service:
     build:
       context: .
-      dockerfile: main-service/Dockerfile
+      dockerfile: core/main-service/Dockerfile
     ports:
       - "8080:8080"
     depends_on:

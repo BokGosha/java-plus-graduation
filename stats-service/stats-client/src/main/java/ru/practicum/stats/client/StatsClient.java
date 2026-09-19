@@ -1,6 +1,5 @@
 package ru.practicum.stats.client;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -22,7 +21,11 @@ public class StatsClient {
 
     private final RestClient rest;
 
-    public StatsClient(@Value("${stats-server.url:http://localhost:9090}") String baseUrl) {
+    public StatsClient() {
+        this("lb://stats-server");
+    }
+
+    public StatsClient(String baseUrl) {
         this.rest = RestClient.builder()
                 .baseUrl(baseUrl)
                 .build();
