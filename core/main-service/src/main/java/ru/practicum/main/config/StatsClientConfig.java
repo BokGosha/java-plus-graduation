@@ -9,8 +9,8 @@ import ru.practicum.stats.client.StatsClient;
 public class StatsClientConfig {
 
     @Bean
-    public StatsClient statsClient() {
-        return new StatsClient();
+    public StatsClient statsClient(@Value("${stats-server.url:lb://stats-server}") String statsServerUrl) {
+        return new StatsClient(statsServerUrl);
     }
 
     @Bean
