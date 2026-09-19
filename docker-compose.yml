@@ -58,7 +58,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://main-db:5432/main
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      STATS_SERVER_URL: http://stats-server
+      STATS_SERVER_URL: http://stats-server:9090
 
 volumes:
   stats-db-data:
