@@ -16,6 +16,7 @@ import java.util.List;
 public class StatsService {
 
     private final StatsRepository statsRepository;
+
     private final EndpointHitMapper endpointHitMapper;
 
     public void saveHit(EndpointHitDto endpointHitDto) {
@@ -25,8 +26,8 @@ public class StatsService {
     }
 
     public List<ViewStatsDto> getStats(StatsRequestDto request) {
-        return request.getUnique()
-                ? statsRepository.findUniqueStats(request.getStart(), request.getEnd(), request.getUris())
-                : statsRepository.findStats(request.getStart(), request.getEnd(), request.getUris());
+        return request.unique()
+                ? statsRepository.findUniqueStats(request.start(), request.end(), request.uris())
+                : statsRepository.findStats(request.start(), request.end(), request.uris());
     }
 }
