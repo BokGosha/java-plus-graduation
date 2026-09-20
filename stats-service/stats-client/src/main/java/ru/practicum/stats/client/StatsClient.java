@@ -22,11 +22,11 @@ public class StatsClient {
     private final RestClient rest;
 
     public StatsClient() {
-        this("lb://stats-server");
+        this(RestClient.builder(), "lb://stats-server");
     }
 
-    public StatsClient(String baseUrl) {
-        this.rest = RestClient.builder()
+    public StatsClient(RestClient.Builder restClientBuilder, String baseUrl) {
+        this.rest = restClientBuilder
                 .baseUrl(baseUrl)
                 .build();
     }
