@@ -1,3 +1,10 @@
+server:
+  port: ${SERVER_PORT:0}
+
+management:
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:8081}
+
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -16,9 +23,6 @@ spring:
   sql:
     init:
       mode: always
-
-stats-server:
-  url: ${STATS_SERVER_URL:lb://stats-server}
 
 logging:
   level:
