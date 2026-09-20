@@ -2,16 +2,16 @@ FROM maven:3.9.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-COPY ../.. .
+COPY . .
 
-RUN mvn -pl main-service -am package -DskipTests
+RUN mvn -q -pl core/main-service -am package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /app/main-service/target/*.jar app.jar
+COPY --from=build /app/core/main-service/target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8081
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
