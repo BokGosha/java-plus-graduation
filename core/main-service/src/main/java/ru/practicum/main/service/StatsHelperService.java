@@ -1,8 +1,8 @@
 package ru.practicum.main.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.practicum.main.model.Event;
 import ru.practicum.stats.client.StatsClient;
@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class StatsHelperService {
 
     private static final String URI_PREFIX = "/events/";
@@ -23,6 +22,12 @@ public class StatsHelperService {
 
     private final StatsClient statsClient;
     private final String appName;
+
+    public StatsHelperService(StatsClient statsClient,
+                              @Value("${spring.application.name}") String appName) {
+        this.statsClient = statsClient;
+        this.appName = appName;
+    }
 
     public Map<Long, Long> getViews(Collection<Event> events) {
         if (events == null || events.isEmpty()) {
