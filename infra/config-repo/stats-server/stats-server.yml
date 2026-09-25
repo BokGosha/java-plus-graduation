@@ -1,0 +1,6 @@
+server:
+  port: ${SERVER_PORT:9090}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/stats}

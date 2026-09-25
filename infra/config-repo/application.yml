@@ -1,3 +1,34 @@
 eureka:
   client:
     registry-fetch-interval-seconds: 5
+
+spring:
+  cloud:
+    loadbalancer:
+      cache:
+        ttl: 5s
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: basic
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    ru.practicum: DEBUG
+    org.springframework.web: INFO

@@ -10,7 +10,11 @@ spring:
     config:
       server:
         native:
-          search-locations: ${CONFIG_REPO_LOCATION:file:./infra/config-repo}
+          search-locations:
+            - file:./infra/config-repo
+            - file:./infra/config-repo/core/{application}
+            - file:./infra/config-repo/stats-server
+            - file:./infra/config-repo/gateway-server
 
 eureka:
   client:
