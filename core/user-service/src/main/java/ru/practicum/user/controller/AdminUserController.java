@@ -1,4 +1,4 @@
-package ru.practicum.main.controller.admin;
+package ru.practicum.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -7,9 +7,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.dto.NewUserRequest;
-import ru.practicum.main.dto.UserDto;
-import ru.practicum.main.service.UserService;
+import ru.practicum.user.dto.NewUserRequest;
+import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.service.UserService;
 
 import java.util.List;
 
@@ -22,18 +22,21 @@ public class AdminUserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
+    public List<UserDto> getUsers(@RequestParam(required = false) List<Long> userIds,
                                   @RequestParam(defaultValue = "0") int from,
                                   @RequestParam(defaultValue = "10") int size) {
-        log.info("GET /admin/users - ids: {}, from: {}, size: {}", ids, from, size);
+        log.info("GET /admin/users - ids: {}, from: {}, size: {}", userIds, from, size);
+
         Pageable pageable = PageRequest.of(from / size, size);
-        return userService.getUsers(ids, pageable);
+
+        return userService.getUsers(userIds, pageable);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto registerUser(@Valid @RequestBody NewUserRequest newUserRequest) {
-        log.info("POST /admin/users - register user: {}", newUserRequest.getEmail());
+        log.info("POST /admin/users - register user: {}", newUserRequest.email());
+
         return userService.registerUser(newUserRequest);
     }
 
@@ -41,6 +44,7 @@ public class AdminUserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long userId) {
         log.info("DELETE /admin/users/{} - delete user", userId);
+
         userService.deleteUser(userId);
     }
 }
