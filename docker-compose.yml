@@ -1,3 +1,29 @@
+x-core-service: &core-service
+  restart: unless-stopped
+  environment: &core-env
+    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    SPRING_DATASOURCE_USERNAME: postgres
+    SPRING_DATASOURCE_PASSWORD: postgres
+
+x-service-healthcheck: &service-healthcheck
+  interval: 5s
+  timeout: 5s
+  retries: 20
+  start_period: 40s
+
+x-postgres: &postgres
+  image: postgres:17
+  restart: unless-stopped
+
+x-postgres-env: &postgres-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
+x-postgres-healthcheck: &postgres-healthcheck
+  interval: 5s
+  timeout: 5s
+  retries: 10
+
 services:
   discovery-server:
     build:
@@ -77,66 +103,183 @@ services:
       retries: 20
       start_period: 40s
 
-  main-service:
+  user-service:
+    <<: *core-service
     build:
       context: .
-      dockerfile: core/main-service/Dockerfile
-    restart: unless-stopped
+      dockerfile: core/user-service/Dockerfile
     depends_on:
       discovery-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      main-db:
-        condition: service_healthy
-      stats-server:
+      user-db:
         condition: service_healthy
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://main-db:5432/main
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      <<: *core-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/users
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health || exit 1" ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 40s
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8082/actuator/health || exit 1" ]
+
+  event-service:
+    <<: *core-service
+    build:
+      context: .
+      dockerfile: core/event-service/Dockerfile
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      event-db:
+        condition: service_healthy
+    environment:
+      <<: *core-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://event-db:5432/events
+    healthcheck:
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health || exit 1" ]
+
+  request-service:
+    <<: *core-service
+    build:
+      context: .
+      dockerfile: core/request-service/Dockerfile
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      request-db:
+        condition: service_healthy
+    environment:
+      <<: *core-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://request-db:5432/requests
+    healthcheck:
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8084/actuator/health || exit 1" ]
+
+  compilation-service:
+    <<: *core-service
+    build:
+      context: .
+      dockerfile: core/compilation-service/Dockerfile
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      compilation-db:
+        condition: service_healthy
+    environment:
+      <<: *core-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://compilation-db:5432/compilations
+    healthcheck:
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8085/actuator/health || exit 1" ]
+
+  comment-service:
+    <<: *core-service
+    build:
+      context: .
+      dockerfile: core/comment-service/Dockerfile
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      comment-db:
+        condition: service_healthy
+    environment:
+      <<: *core-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://comment-db:5432/comments
+    healthcheck:
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8086/actuator/health || exit 1" ]
 
   stats-db:
-    image: postgres:17
-    restart: unless-stopped
+    <<: *postgres
     ports:
       - "5433:5432"
     environment:
+      <<: *postgres-env
       POSTGRES_DB: stats
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
     volumes:
       - stats-db-data:/var/lib/postgresql/data
     healthcheck:
+      <<: *postgres-healthcheck
       test: [ "CMD-SHELL", "pg_isready -U postgres -d stats" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
-  main-db:
-    image: postgres:17
-    restart: unless-stopped
+  user-db:
+    <<: *postgres
     ports:
-      - "5434:5432"
+      - "5435:5432"
     environment:
-      POSTGRES_DB: main
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      <<: *postgres-env
+      POSTGRES_DB: users
     volumes:
-      - main-db-data:/var/lib/postgresql/data
+      - user-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d main" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      <<: *postgres-healthcheck
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d users" ]
+
+  event-db:
+    <<: *postgres
+    ports:
+      - "5436:5432"
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: events
+    volumes:
+      - event-db-data:/var/lib/postgresql/data
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d events" ]
+
+  request-db:
+    <<: *postgres
+    ports:
+      - "5437:5432"
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: requests
+    volumes:
+      - request-db-data:/var/lib/postgresql/data
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d requests" ]
+
+  compilation-db:
+    <<: *postgres
+    ports:
+      - "5438:5432"
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: compilations
+    volumes:
+      - compilation-db-data:/var/lib/postgresql/data
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d compilations" ]
+
+  comment-db:
+    <<: *postgres
+    ports:
+      - "5439:5432"
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: comments
+    volumes:
+      - comment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d comments" ]
 
 volumes:
   stats-db-data:
-  main-db-data:
+  user-db-data:
+  event-db-data:
+  request-db-data:
+  compilation-db-data:
+  comment-db-data:

@@ -6,14 +6,14 @@ COPY . .
 
 # Кэш ~/.m2 общий для всех образов: зависимости скачиваются один раз
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    mvn -q -pl infra/discovery-server -am package -DskipTests
+    mvn -q -pl core/comment-service -am package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /app/infra/discovery-server/target/*.jar app.jar
+COPY --from=build /app/core/comment-service/target/*.jar app.jar
 
-EXPOSE 8761
+EXPOSE 8086
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

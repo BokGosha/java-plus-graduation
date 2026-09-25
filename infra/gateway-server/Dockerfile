@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn -q -pl infra/gateway-server -am package -DskipTests
+# Кэш ~/.m2 общий для всех образов: зависимости скачиваются один раз
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -q -pl infra/gateway-server -am package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
