@@ -1,14 +1,14 @@
-package ru.practicum.main.controller.admin;
+package ru.practicum.compilation.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.dto.CompilationDto;
-import ru.practicum.main.dto.NewCompilationDto;
-import ru.practicum.main.dto.UpdateCompilationRequest;
-import ru.practicum.main.service.CompilationService;
+import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.dto.NewCompilationDto;
+import ru.practicum.compilation.dto.UpdateCompilationRequest;
+import ru.practicum.compilation.service.CompilationService;
 
 @Slf4j
 @RestController
@@ -21,7 +21,8 @@ public class AdminCompilationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto addCompilation(@Valid @RequestBody NewCompilationDto newCompilationDto) {
-        log.info("POST /admin/compilations - add compilation: {}", newCompilationDto.getTitle());
+        log.info("POST /admin/compilations - add compilation: {}", newCompilationDto.title());
+
         return compilationService.addCompilation(newCompilationDto);
     }
 
@@ -29,6 +30,7 @@ public class AdminCompilationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable Long compId) {
         log.info("DELETE /admin/compilations/{} - delete compilation", compId);
+
         compilationService.deleteCompilation(compId);
     }
 
@@ -36,6 +38,7 @@ public class AdminCompilationController {
     public CompilationDto updateCompilation(@PathVariable Long compId,
                                             @Valid @RequestBody UpdateCompilationRequest updateRequest) {
         log.info("PATCH /admin/compilations/{} - update compilation", compId);
+
         return compilationService.updateCompilation(compId, updateRequest);
     }
 }

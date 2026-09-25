@@ -1,12 +1,12 @@
-package ru.practicum.main.controller.publicapi;
+package ru.practicum.compilation.controller;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.dto.CompilationDto;
-import ru.practicum.main.service.CompilationService;
+import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.service.CompilationService;
 
 import java.util.List;
 
