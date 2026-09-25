@@ -1,4 +1,4 @@
-package ru.practicum.main.exception;
+package ru.practicum.exception;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiError {
+
     private List<String> errors;
     private String message;
     private String reason;

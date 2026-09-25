@@ -1,4 +1,4 @@
-package ru.practicum.main.exception;
+package ru.practicum.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
