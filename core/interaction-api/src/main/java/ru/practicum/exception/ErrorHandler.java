@@ -8,11 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,17 +24,15 @@ import java.util.List;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler({
+            NotFoundException.class,
+            NoResourceFoundException.class,
+            NoHandlerFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleNotFoundException(final NotFoundException e) {
-        log.error("404 {}", e.getMessage());
-        return ApiError.builder()
-                .errors(List.of(e.getClass().getSimpleName()))
-                .message(e.getMessage())
-                .reason("The required object was not found.")
-                .status("NOT_FOUND")
-                .timestamp(LocalDateTime.now())
-                .build();
+    public ApiError handleNotFoundException(final Exception e) {
+        log.warn("404 {}", e.getMessage());
+        return notFound(e);
     }
 
     @ExceptionHandler({
@@ -43,44 +44,46 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleBadRequestException(final Exception e) {
         log.error("400 {}", e.getMessage());
-        return ApiError.builder()
-                .errors(List.of(e.getClass().getSimpleName()))
-                .message(e.getMessage())
-                .reason("Incorrectly made request.")
-                .status("BAD_REQUEST")
-                .timestamp(LocalDateTime.now())
-                .build();
+        return apiError(e, "Incorrectly made request.", HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleDataIntegrityViolationException(final DataIntegrityViolationException e) {
         log.error("409 {}", e.getMessage());
-        return ApiError.builder()
-                .errors(List.of(e.getClass().getSimpleName()))
-                .message(e.getMessage())
-                .reason("Integrity constraint has been violated.")
-                .status("CONFLICT")
-                .timestamp(LocalDateTime.now())
-                .build();
+        return apiError(e, "Integrity constraint has been violated.", HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleConflictException(final ConflictException e) {
         log.error("409 {}", e.getMessage());
-        return ApiError.builder()
-                .errors(List.of(e.getClass().getSimpleName()))
-                .message(e.getMessage())
-                .reason("For the requested operation the conditions are not met.")
-                .status("CONFLICT")
-                .timestamp(LocalDateTime.now())
-                .build();
+        return conflict(e);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ApiError> handleNoFallbackAvailableException(final NoFallbackAvailableException e) {
+        Throwable cause = e.getCause();
+
+        while (cause != null) {
+            if (cause instanceof NotFoundException notFound) {
+                log.error("404 {}", notFound.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFound(notFound));
+            }
+            if (cause instanceof ConflictException conflict) {
+                log.error("409 {}", conflict.getMessage());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(conflict(conflict));
+            }
+            cause = cause.getCause();
+        }
+
+        log.error("503 {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(apiError(e, "Required service is unavailable.", HttpStatus.SERVICE_UNAVAILABLE));
     }
 
     @ExceptionHandler({
             ServiceUnavailableException.class,
-            NoFallbackAvailableException.class,
             CallNotPermittedException.class,
             RetryableException.class,
             FeignException.class
@@ -88,24 +91,30 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public ApiError handleServiceUnavailableException(final Exception e) {
         log.error("503 {}", e.getMessage());
-        return ApiError.builder()
-                .errors(List.of(e.getClass().getSimpleName()))
-                .message(e.getMessage())
-                .reason("Required service is unavailable.")
-                .status("SERVICE_UNAVAILABLE")
-                .timestamp(LocalDateTime.now())
-                .build();
+        return apiError(e, "Required service is unavailable.", HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiError handleAllExceptions(final Exception e) {
         log.error("500 Internal Server Error: ", e);
+        return apiError(e, "Internal server error.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ApiError notFound(final Throwable e) {
+        return apiError(e, "The required object was not found.", HttpStatus.NOT_FOUND);
+    }
+
+    private ApiError conflict(final Throwable e) {
+        return apiError(e, "For the requested operation the conditions are not met.", HttpStatus.CONFLICT);
+    }
+
+    private ApiError apiError(final Throwable e, final String reason, final HttpStatus status) {
         return ApiError.builder()
                 .errors(List.of(e.getClass().getSimpleName()))
                 .message(e.getMessage())
-                .reason("Internal server error.")
-                .status("INTERNAL_SERVER_ERROR")
+                .reason(reason)
+                .status(status.name())
                 .timestamp(LocalDateTime.now())
                 .build();
     }

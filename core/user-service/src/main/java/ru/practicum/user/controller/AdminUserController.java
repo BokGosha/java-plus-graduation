@@ -22,7 +22,7 @@ public class AdminUserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserDto> getUsers(@RequestParam(required = false) List<Long> userIds,
+    public List<UserDto> getUsers(@RequestParam(value = "ids", required = false) List<Long> userIds,
                                   @RequestParam(defaultValue = "0") int from,
                                   @RequestParam(defaultValue = "10") int size) {
         log.info("GET /admin/users - ids: {}, from: {}, size: {}", userIds, from, size);
