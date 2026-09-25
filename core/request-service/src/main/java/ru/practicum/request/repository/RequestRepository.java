@@ -1,9 +1,9 @@
-package ru.practicum.main.repository;
+package ru.practicum.request.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import ru.practicum.main.model.Request;
-import ru.practicum.main.model.RequestStatus;
+import ru.practicum.request.model.Request;
+import ru.practicum.request.model.RequestStatus;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,11 +23,11 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
     @Query("""
-            select r.event.id, count(r.id)
+            select r.eventId, count(r.id)
             from Request r
-            where r.event.id in :eventIds
+            where r.eventId in :eventIds
               and r.status = :status
-            group by r.event.id
+            group by r.eventId
             """)
     List<Object[]> countByEventIdsAndStatus(Collection<Long> eventIds, RequestStatus status);
 }

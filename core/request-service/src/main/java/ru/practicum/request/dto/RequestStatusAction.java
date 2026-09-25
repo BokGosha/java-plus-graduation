@@ -1,4 +1,4 @@
-package ru.practicum.main.dto;
+package ru.practicum.request.dto;
 
 public enum RequestStatusAction {
     CONFIRMED,

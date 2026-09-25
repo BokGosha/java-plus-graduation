@@ -1,10 +1,12 @@
-package ru.practicum.main.service;
+package ru.practicum.request.service;
 
-import ru.practicum.main.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.main.dto.EventRequestStatusUpdateResult;
-import ru.practicum.main.dto.ParticipationRequestDto;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.request.dto.EventRequestStatusUpdateResult;
+import ru.practicum.request.dto.ParticipationRequestDto;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface RequestService {
 
@@ -19,4 +21,6 @@ public interface RequestService {
     EventRequestStatusUpdateResult updateRequestsStatus(Long userId,
                                                         Long eventId,
                                                         EventRequestStatusUpdateRequest updateRequest);
+
+    Map<Long, Long> getRequestsCountByEventIds(Collection<Long> eventIds, String status);
 }
