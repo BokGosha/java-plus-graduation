@@ -1,4 +1,4 @@
-package ru.practicum.main.model;
+package ru.practicum.comment.model;
 
 public enum CommentStatus {
     PENDING,    // ожидает модерации

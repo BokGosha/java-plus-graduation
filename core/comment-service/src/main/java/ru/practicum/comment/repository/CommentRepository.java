@@ -1,15 +1,15 @@
-package ru.practicum.main.repository;
+package ru.practicum.comment.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.practicum.main.model.Comment;
-import ru.practicum.main.model.CommentStatus;
+import ru.practicum.comment.model.Comment;
+import ru.practicum.comment.model.CommentStatus;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
@@ -29,9 +29,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     long countByEventIdAndStatus(Long eventId, CommentStatus status);
 
-    @Query("SELECT c.event.id, COUNT(c.id) FROM Comment c " +
-            "WHERE c.event.id IN :eventIds AND c.status = :status " +
-            "GROUP BY c.event.id")
-    Map<Long, Long> countByEventIdsAndStatus(@Param("eventIds") Collection<Long> eventIds,
-                                             @Param("status") CommentStatus status);
+    @Query("SELECT c.eventId, COUNT(c.id) FROM Comment c " +
+            "WHERE c.eventId IN :eventIds AND c.status = :status " +
+            "GROUP BY c.eventId")
+    List<Object[]> countByEventIdsAndStatus(@Param("eventIds") Collection<Long> eventIds,
+                                            @Param("status") CommentStatus status);
 }

@@ -1,4 +1,4 @@
-package ru.practicum.main.controller.admin;
+package ru.practicum.comment.controller;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.service.CommentService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.service.CommentService;
 
 import java.util.List;
 
@@ -22,22 +22,25 @@ public class AdminCommentController {
     private final CommentService commentService;
 
     @GetMapping
-    public List<CommentDto> getAllComments(@RequestParam(required = false) String status,
+    public List<CommentDto> getComments(@RequestParam(required = false) String status,
                                            @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                            @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("GET /admin/comments - status={}, from={}, size={}", status, from, size);
-        return commentService.getAllComments(status, from, size);
+
+        return commentService.getComments(status, from, size);
     }
 
     @PatchMapping("/{commentId}/publish")
     public CommentDto publishComment(@PathVariable Long commentId) {
         log.info("PATCH /admin/comments/{}/publish", commentId);
+
         return commentService.publishComment(commentId);
     }
 
     @PatchMapping("/{commentId}/reject")
     public CommentDto rejectComment(@PathVariable Long commentId) {
         log.info("PATCH /admin/comments/{}/reject", commentId);
+
         return commentService.rejectComment(commentId);
     }
 
@@ -45,6 +48,7 @@ public class AdminCommentController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable Long commentId) {
         log.info("DELETE /admin/comments/{}", commentId);
+
         commentService.deleteCommentByAdmin(commentId);
     }
 }

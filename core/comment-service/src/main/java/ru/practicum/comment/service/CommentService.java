@@ -1,11 +1,13 @@
-package ru.practicum.main.service;
+package ru.practicum.comment.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.dto.NewCommentDto;
-import ru.practicum.main.dto.UpdateCommentDto;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface CommentService {
 
@@ -21,13 +23,13 @@ public interface CommentService {
 
     CommentDto getEventComment(Long eventId, Long commentId, HttpServletRequest request);
 
-    // Административные методы
-
-    List<CommentDto> getAllComments(String status, int from, int size);
+    List<CommentDto> getComments(String status, int from, int size);
 
     CommentDto publishComment(Long commentId);
 
     CommentDto rejectComment(Long commentId);
 
     void deleteCommentByAdmin(Long commentId);
+
+    Map<Long, Long> getCommentsCountByEventIds(Collection<Long> eventIds, String status);
 }

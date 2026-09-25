@@ -1,4 +1,4 @@
-package ru.practicum.main.controller;
+package ru.practicum.comment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -8,12 +8,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.main.controller.priv.PrivateCommentController;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.dto.NewCommentDto;
-import ru.practicum.main.dto.UpdateCommentDto;
-import ru.practicum.main.dto.UserShortDto;
-import ru.practicum.main.service.CommentService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
+import ru.practicum.comment.service.CommentService;
+import ru.practicum.comment.client.dto.UserShortDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -85,10 +84,7 @@ class PrivateCommentControllerTest {
                 .updated(LocalDateTime.of(2026, 6, 2, 13, 0))
                 .status("PENDING")
                 .eventId(2L)
-                .author(UserShortDto.builder()
-                        .id(1L)
-                        .name("User")
-                        .build())
+                .author(new UserShortDto(1L, "User"))
                 .build();
 
         Mockito.when(commentService.updateComment(eq(1L), eq(10L), any(UpdateCommentDto.class)))
@@ -131,10 +127,7 @@ class PrivateCommentControllerTest {
                 .updated(null)
                 .status("PENDING")
                 .eventId(2L)
-                .author(UserShortDto.builder()
-                        .id(1L)
-                        .name("User")
-                        .build())
+                .author(new UserShortDto(1L, "User"))
                 .build();
     }
 }

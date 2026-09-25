@@ -1,4 +1,4 @@
-package ru.practicum.main.controller;
+package ru.practicum.comment.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
@@ -7,10 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.main.controller.publicapi.PublicCommentController;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.dto.UserShortDto;
-import ru.practicum.main.service.CommentService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.service.CommentService;
+import ru.practicum.comment.client.dto.UserShortDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -73,10 +72,7 @@ class PublicCommentControllerTest {
                 .updated(null)
                 .status("PUBLISHED")
                 .eventId(2L)
-                .author(UserShortDto.builder()
-                        .id(1L)
-                        .name("User")
-                        .build())
+                .author(new UserShortDto(1L, "User"))
                 .build();
     }
 }

@@ -1,4 +1,4 @@
-package ru.practicum.main.controller;
+package ru.practicum.comment.controller;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -6,10 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.main.controller.admin.AdminCommentController;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.dto.UserShortDto;
-import ru.practicum.main.service.CommentService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.service.CommentService;
+import ru.practicum.comment.client.dto.UserShortDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,7 +29,7 @@ class AdminCommentControllerTest {
 
     @Test
     void getAllComments_shouldReturnComments() throws Exception {
-        Mockito.when(commentService.getAllComments(eq("PENDING"), eq(0), eq(10)))
+        Mockito.when(commentService.getComments(eq("PENDING"), eq(0), eq(10)))
                 .thenReturn(List.of(commentDto("PENDING")));
 
         mockMvc.perform(get("/admin/comments")
@@ -45,7 +44,7 @@ class AdminCommentControllerTest {
 
     @Test
     void getAllComments_withoutStatus_shouldReturnComments() throws Exception {
-        Mockito.when(commentService.getAllComments(eq(null), eq(0), eq(10)))
+        Mockito.when(commentService.getComments(eq(null), eq(0), eq(10)))
                 .thenReturn(List.of(commentDto("PENDING")));
 
         mockMvc.perform(get("/admin/comments"))
@@ -98,10 +97,7 @@ class AdminCommentControllerTest {
                 .updated(null)
                 .status(status)
                 .eventId(2L)
-                .author(UserShortDto.builder()
-                        .id(1L)
-                        .name("User")
-                        .build())
+                .author(new UserShortDto(1L, "User"))
                 .build();
     }
 }

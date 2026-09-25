@@ -1,4 +1,4 @@
-package ru.practicum.main.controller.publicapi;
+package ru.practicum.comment.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Positive;
@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.service.CommentService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.service.CommentService;
 
 import java.util.List;
 
@@ -27,6 +27,7 @@ public class PublicCommentController {
                                              @RequestParam(defaultValue = "10") @Positive int size,
                                              HttpServletRequest request) {
         log.info("GET /events/{}/comments - from={}, size={}", eventId, from, size);
+
         return commentService.getEventComments(eventId, from, size, request);
     }
 
@@ -35,6 +36,7 @@ public class PublicCommentController {
                                       @PathVariable Long commentId,
                                       HttpServletRequest request) {
         log.info("GET /events/{}/comments/{}", eventId, commentId);
+
         return commentService.getEventComment(eventId, commentId, request);
     }
 }

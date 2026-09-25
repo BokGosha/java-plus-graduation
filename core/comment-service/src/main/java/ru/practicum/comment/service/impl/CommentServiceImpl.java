@@ -1,4 +1,4 @@
-package ru.practicum.main.service.impl;
+package ru.practicum.comment.service.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -7,21 +7,29 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.dto.NewCommentDto;
-import ru.practicum.main.dto.UpdateCommentDto;
-import ru.practicum.main.exception.ConflictException;
-import ru.practicum.main.exception.NotFoundException;
-import ru.practicum.main.mapper.CommentMapper;
-import ru.practicum.main.model.*;
-import ru.practicum.main.repository.CommentRepository;
-import ru.practicum.main.repository.EventRepository;
-import ru.practicum.main.repository.UserRepository;
-import ru.practicum.main.service.CommentService;
-import ru.practicum.main.service.StatsHelperService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
+import ru.practicum.comment.mapper.CommentMapper;
+import ru.practicum.comment.model.Comment;
+import ru.practicum.comment.model.CommentStatus;
+import ru.practicum.comment.repository.CommentRepository;
+import ru.practicum.comment.service.CommentService;
+import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
+import ru.practicum.comment.client.EventClient;
+import ru.practicum.comment.client.UserClient;
+import ru.practicum.comment.client.dto.EventInternalDto;
+import ru.practicum.comment.client.dto.UserShortDto;
+import ru.practicum.stats.client.StatsClient;
+import ru.practicum.comment.client.dto.EventState;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,29 +37,31 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
-    private final EventRepository eventRepository;
     private final CommentMapper commentMapper;
-    private final StatsHelperService statsHelperService;
+
+    private final UserClient userClient;
+    private final EventClient eventClient;
+
+    private final StatsClient statsClient;
 
     @Override
     public CommentDto addComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
-        User user = getUser(userId);
-        Event event = getEvent(eventId);
+        UserShortDto user = getUser(userId);
+        EventInternalDto event = getEvent(eventId);
 
-        if (event.getState() != EventState.PUBLISHED) {
+        if (event.state() != EventState.PUBLISHED) {
             throw new ConflictException("Only published events can be commented");
         }
 
         Comment comment = commentMapper.toEntity(newCommentDto);
-        comment.setAuthor(user);
-        comment.setEvent(event);
+        comment.setAuthorId(userId);
+        comment.setEventId(eventId);
         comment.setStatus(CommentStatus.PENDING);
         comment.setCreated(LocalDateTime.now());
 
         Comment savedComment = commentRepository.save(comment);
 
-        return commentMapper.toDto(savedComment);
+        return commentMapper.toDto(savedComment, user);
     }
 
     @Override
@@ -60,11 +70,7 @@ public class CommentServiceImpl implements CommentService {
 
         Pageable pageable = PageRequest.of(from / size, size);
 
-        return commentRepository.findByAuthorId(userId, pageable)
-                .getContent()
-                .stream()
-                .map(commentMapper::toDto)
-                .toList();
+        return toDtos(commentRepository.findByAuthorId(userId, pageable).getContent());
     }
 
     @Override
@@ -75,7 +81,7 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() ->
                         new NotFoundException("Comment with id=" + commentId + " was not found"));
 
-        if (!comment.getAuthor().getId().equals(userId)) {
+        if (!comment.getAuthorId().equals(userId)) {
             throw new NotFoundException("Comment with id=" + commentId + " was not found");
         }
 
@@ -87,13 +93,13 @@ public class CommentServiceImpl implements CommentService {
             throw new ConflictException("Deleted comment cannot be updated");
         }
 
-        comment.setText(updateCommentDto.getText());
+        comment.setText(updateCommentDto.text());
         comment.setUpdated(LocalDateTime.now());
         comment.setStatus(CommentStatus.PENDING);
 
         Comment updatedComment = commentRepository.save(comment);
 
-        return commentMapper.toDto(updatedComment);
+        return toDto(updatedComment);
     }
 
     @Override
@@ -104,7 +110,7 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() ->
                         new NotFoundException("Comment with id=" + commentId + " was not found"));
 
-        if (!comment.getAuthor().getId().equals(userId)) {
+        if (!comment.getAuthorId().equals(userId)) {
             throw new NotFoundException("Comment with id=" + commentId + " was not found");
         }
 
@@ -120,14 +126,10 @@ public class CommentServiceImpl implements CommentService {
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "created"));
 
-        List<CommentDto> comments = commentRepository
-                .findByEventIdAndStatus(eventId, CommentStatus.PUBLISHED, pageable)
-                .getContent()
-                .stream()
-                .map(commentMapper::toDto)
-                .toList();
+        List<CommentDto> comments = toDtos(commentRepository
+                .findByEventIdAndStatus(eventId, CommentStatus.PUBLISHED, pageable).getContent());
 
-        statsHelperService.hit(request);
+        statsClient.hit(request);
 
         return comments;
     }
@@ -142,30 +144,24 @@ public class CommentServiceImpl implements CommentService {
             throw new NotFoundException("Comment with id=" + commentId + " was not found");
         }
 
-        statsHelperService.hit(request);
+        statsClient.hit(request);
 
-        return commentMapper.toDto(comment);
+        return toDto(comment);
     }
 
     @Override
-    public List<CommentDto> getAllComments(String status, int from, int size) {
-        // Если статус не указан — возвращаем комментарии всех статусов
+    public List<CommentDto> getComments(String status, int from, int size) {
         CommentStatus commentStatus = CommentStatus.from(status);
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created"));
 
-        return commentRepository.findAllByStatus(commentStatus, pageable)
-                .getContent()
-                .stream()
-                .map(commentMapper::toDto)
-                .toList();
+        return toDtos(commentRepository.findAllByStatus(commentStatus, pageable).getContent());
     }
 
     @Override
     public CommentDto publishComment(Long commentId) {
         Comment comment = getComment(commentId);
 
-        // Публиковать имеет смысл только комментарий, ожидающий модерации
         if (comment.getStatus() != CommentStatus.PENDING) {
             throw new ConflictException("Only comment with status PENDING can be published");
         }
@@ -173,14 +169,13 @@ public class CommentServiceImpl implements CommentService {
         comment.setStatus(CommentStatus.PUBLISHED);
         comment.setUpdated(LocalDateTime.now());
 
-        return commentMapper.toDto(commentRepository.save(comment));
+        return toDto(commentRepository.save(comment));
     }
 
     @Override
     public CommentDto rejectComment(Long commentId) {
         Comment comment = getComment(commentId);
 
-        // Отклонить можно только комментарий, ожидающий модерации
         if (comment.getStatus() != CommentStatus.PENDING) {
             throw new ConflictException("Only comment with status PENDING can be rejected");
         }
@@ -188,16 +183,31 @@ public class CommentServiceImpl implements CommentService {
         comment.setStatus(CommentStatus.REJECTED);
         comment.setUpdated(LocalDateTime.now());
 
-        return commentMapper.toDto(commentRepository.save(comment));
+        return toDto(commentRepository.save(comment));
     }
 
     @Override
     public void deleteCommentByAdmin(Long commentId) {
-        // Администратор удаляет комментарий полностью из БД
         if (!commentRepository.existsById(commentId)) {
             throw new NotFoundException("Comment with id=" + commentId + " was not found");
         }
+
         commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    public Map<Long, Long> getCommentsCountByEventIds(Collection<Long> eventIds, String status) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Map.of();
+        }
+
+        CommentStatus commentStatus = CommentStatus.from(status);
+
+        return commentRepository.countByEventIdsAndStatus(eventIds, commentStatus).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
     }
 
     private Comment getComment(Long commentId) {
@@ -206,27 +216,33 @@ public class CommentServiceImpl implements CommentService {
                         new NotFoundException("Comment with id=" + commentId + " was not found"));
     }
 
-    private User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new NotFoundException("User with id=" + userId + " was not found"));
+    private CommentDto toDto(Comment comment) {
+        return commentMapper.toDto(comment, getUser(comment.getAuthorId()));
     }
 
-    private Event getEvent(Long eventId) {
-        return eventRepository.findById(eventId)
-                .orElseThrow(() ->
-                        new NotFoundException("Event with id=" + eventId + " was not found"));
+    private List<CommentDto> toDtos(List<Comment> comments) {
+        List<Long> authorIds = comments.stream().map(Comment::getAuthorId).distinct().toList();
+        Map<Long, UserShortDto> authors = userClient.getUsers(authorIds).stream()
+                .collect(Collectors.toMap(UserShortDto::id, Function.identity()));
+
+        return comments.stream()
+                .map(c -> commentMapper.toDto(c, authors.get(c.getAuthorId())))
+                .toList();
+    }
+
+    private UserShortDto getUser(Long userId) {
+        return userClient.getUser(userId);
+    }
+
+    private EventInternalDto getEvent(Long eventId) {
+        return eventClient.getEvent(eventId);
     }
 
     private void checkUserExists(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
+        userClient.getUser(userId);
     }
 
     private void checkEventExists(Long eventId) {
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
-        }
+        eventClient.getEvent(eventId);
     }
 }

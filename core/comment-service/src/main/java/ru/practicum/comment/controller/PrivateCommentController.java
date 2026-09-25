@@ -1,4 +1,4 @@
-package ru.practicum.main.controller.priv;
+package ru.practicum.comment.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -8,10 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.main.dto.CommentDto;
-import ru.practicum.main.dto.NewCommentDto;
-import ru.practicum.main.dto.UpdateCommentDto;
-import ru.practicum.main.service.CommentService;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
+import ru.practicum.comment.service.CommentService;
 
 import java.util.List;
 
@@ -29,6 +29,7 @@ public class PrivateCommentController {
                                  @PathVariable Long eventId,
                                  @Valid @RequestBody NewCommentDto newCommentDto) {
         log.info("POST /users/{}/events/{}/comments", userId, eventId);
+
         return commentService.addComment(userId, eventId, newCommentDto);
     }
 
@@ -37,6 +38,7 @@ public class PrivateCommentController {
                                             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                             @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("GET /users/{}/comments - from={}, size={}", userId, from, size);
+
         return commentService.getUserComments(userId, from, size);
     }
 
@@ -45,6 +47,7 @@ public class PrivateCommentController {
                                     @PathVariable Long commentId,
                                     @Valid @RequestBody UpdateCommentDto updateCommentDto) {
         log.info("PATCH /users/{}/comments/{}", userId, commentId);
+
         return commentService.updateComment(userId, commentId, updateCommentDto);
     }
 
@@ -53,6 +56,7 @@ public class PrivateCommentController {
     public void deleteComment(@PathVariable Long userId,
                               @PathVariable Long commentId) {
         log.info("DELETE /users/{}/comments/{}", userId, commentId);
+
         commentService.deleteComment(userId, commentId);
     }
 }
