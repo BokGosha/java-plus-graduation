@@ -1,7 +1,11 @@
 package ru.practicum.exception;
 
+import feign.FeignException;
+import feign.RetryableException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -70,6 +74,25 @@ public class ErrorHandler {
                 .message(e.getMessage())
                 .reason("For the requested operation the conditions are not met.")
                 .status("CONFLICT")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler({
+            ServiceUnavailableException.class,
+            NoFallbackAvailableException.class,
+            CallNotPermittedException.class,
+            RetryableException.class,
+            FeignException.class
+    })
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ApiError handleServiceUnavailableException(final Exception e) {
+        log.error("503 {}", e.getMessage());
+        return ApiError.builder()
+                .errors(List.of(e.getClass().getSimpleName()))
+                .message(e.getMessage())
+                .reason("Required service is unavailable.")
+                .status("SERVICE_UNAVAILABLE")
                 .timestamp(LocalDateTime.now())
                 .build();
     }
