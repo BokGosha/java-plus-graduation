@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      default-filters:
+        - name: Retry
+          args:
+            retries: 2
+            statuses:
+              - BAD_GATEWAY
+              - SERVICE_UNAVAILABLE
+              - GATEWAY_TIMEOUT
+            methods:
+              - GET
+            backoff:
+              firstBackoff: 100ms
+              maxBackoff: 500ms
+      routes:
+        - id: request-service
+          uri: lb://request-service
+          predicates:
+            - Path=/users/*/requests/**,/users/*/events/*/requests
+
+        - id: comment-service
+          uri: lb://comment-service
+          predicates:
+            - Path=/admin/comments/**,/users/*/comments/**,/users/*/events/*/comments,/events/*/comments/**
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users/**
+
+        - id: compilation-service
+          uri: lb://compilation-service
+          predicates:
+            - Path=/admin/compilations/**,/compilations/**
+
+        - id: event-service
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/events/**,/admin/categories/**,/categories/**,/users/*/events/**,/events/**
+
+        - id: stats-server
+          uri: lb://stats-server
+          predicates:
+            - Path=/hit,/stats

@@ -4,7 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn -q -pl stats-service/stats-server -am package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -q -pl stats-service/stats-server -am package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
