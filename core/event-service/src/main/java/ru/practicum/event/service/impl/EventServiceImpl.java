@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.event.client.CommentClient;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
     private static final DateTimeFormatter FORMATTER =
@@ -138,6 +140,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
         UserShortDto initiator = getUser(userId);
         Category category = getCategory(newEventDto.category());
@@ -174,6 +177,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEventByUser(
             Long userId,
             Long eventId,
@@ -272,6 +276,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEventByAdmin(Long eventId, UpdateEventAdminRequest updateRequest) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
@@ -357,7 +362,6 @@ public class EventServiceImpl implements EventService {
         return toShortDtos(events);
     }
 
-    // Данные из других сервисов для списка собираются одним запросом на сервис, а не на каждое событие
     private List<EventShortDto> toShortDtos(List<Event> events) {
         return toShortDtos(events, getConfirmedRequests(events));
     }
@@ -417,7 +421,6 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toFullDto(event, initiator, confirmedRequests, views, commentsCount);
     }
 
-    // Если пользователь удалён, его не будет в ответе — у события initiator останется null
     private Map<Long, UserShortDto> getInitiators(List<Event> events) {
         if (events == null || events.isEmpty()) {
             return Map.of();

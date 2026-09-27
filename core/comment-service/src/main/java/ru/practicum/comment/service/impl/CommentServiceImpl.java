@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -45,6 +47,7 @@ public class CommentServiceImpl implements CommentService {
     private final StatsClient statsClient;
 
     @Override
+    @Transactional
     public CommentDto addComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
         UserShortDto user = getUser(userId);
         EventInternalDto event = getEvent(eventId);
@@ -74,6 +77,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto updateComment(Long userId, Long commentId, UpdateCommentDto updateCommentDto) {
         checkUserExists(userId);
 
@@ -103,6 +107,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Long userId, Long commentId) {
         checkUserExists(userId);
 
@@ -159,6 +164,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto publishComment(Long commentId) {
         Comment comment = getComment(commentId);
 
@@ -173,6 +179,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto rejectComment(Long commentId) {
         Comment comment = getComment(commentId);
 
@@ -187,6 +194,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteCommentByAdmin(Long commentId) {
         if (!commentRepository.existsById(commentId)) {
             throw new NotFoundException("Comment with id=" + commentId + " was not found");
