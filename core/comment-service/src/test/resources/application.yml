@@ -1,0 +1,15 @@
+# Тесты не должны зависеть от запущенных config-server и Eureka
+spring:
+  application:
+    name: comment-service
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      enabled: false
+      discovery:
+        enabled: false
+
+eureka:
+  client:
+    enabled: false

@@ -1,5 +1,6 @@
 package ru.practicum.stats.client;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -25,11 +26,13 @@ public class StatsClient {
     private final DiscoveryClient discoveryClient;
     private final RetryTemplate retryTemplate;
     private final String statsServiceId;
+    private final String appName;
     private final RestClient restClient;
 
     public StatsClient(DiscoveryClient discoveryClient,
                        RetryTemplate retryTemplate,
                        String statsServiceId,
+                       String appName,
                        Duration connectTimeout,
                        Duration readTimeout) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -44,6 +47,16 @@ public class StatsClient {
         this.discoveryClient = discoveryClient;
         this.retryTemplate = retryTemplate;
         this.statsServiceId = statsServiceId;
+        this.appName = appName;
+    }
+
+    public void hit(HttpServletRequest request) {
+        hit(new EndpointHitDto(
+                appName,
+                request.getRequestURI(),
+                resolveIp(request),
+                LocalDateTime.now().withNano(0)
+        ));
     }
 
     public void hit(EndpointHitDto hit) {
@@ -83,6 +96,14 @@ public class StatsClient {
             log.warn("Не удалось получить статистику: {}", e.getMessage());
             return List.of();
         }
+    }
+
+    private String resolveIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     private URI makeUri(String path) {

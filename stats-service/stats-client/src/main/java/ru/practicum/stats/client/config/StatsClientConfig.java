@@ -36,9 +36,10 @@ public class StatsClientConfig {
     public StatsClient statsClient(DiscoveryClient discoveryClient,
                                    RetryTemplate statsRetryTemplate,
                                    @Value("${stats.service-id:stats-server}") String statsServiceId,
+                                   @Value("${spring.application.name}") String appName,
                                    @Value("${stats.connect-timeout:1s}") Duration connectTimeout,
                                    @Value("${stats.read-timeout:3s}") Duration readTimeout) {
-        return new StatsClient(discoveryClient, statsRetryTemplate, statsServiceId,
+        return new StatsClient(discoveryClient, statsRetryTemplate, statsServiceId, appName,
                 connectTimeout, readTimeout);
     }
 }
