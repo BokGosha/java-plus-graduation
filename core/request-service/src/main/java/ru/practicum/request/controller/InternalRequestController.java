@@ -22,4 +22,11 @@ public class InternalRequestController {
                                                       @RequestParam("status") String status) {
         return requestService.getRequestsCountByEventIds(eventIds, status);
     }
+
+    // Нужен event-service: лайк можно поставить только посещённому мероприятию
+    @GetMapping("/confirmed")
+    public boolean isRequestConfirmed(@RequestParam("userId") Long userId,
+                                      @RequestParam("eventId") Long eventId) {
+        return requestService.isRequestConfirmed(userId, eventId);
+    }
 }
