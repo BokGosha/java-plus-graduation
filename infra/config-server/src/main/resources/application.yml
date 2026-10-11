@@ -13,7 +13,7 @@ spring:
           search-locations:
             - file:./infra/config-repo
             - file:./infra/config-repo/core/{application}
-            - file:./infra/config-repo/stats-server
+            - file:./infra/config-repo/stats-service/{application}
             - file:./infra/config-repo/gateway-server
 
 eureka:

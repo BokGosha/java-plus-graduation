@@ -1,6 +1,5 @@
 package ru.practicum.comment.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import ru.practicum.comment.client.dto.UserShortDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,7 +29,7 @@ class PublicCommentControllerTest {
 
     @Test
     void getEventComments_shouldReturnPublishedComments() throws Exception {
-        Mockito.when(commentService.getEventComments(eq(2L), eq(0), eq(10), any(HttpServletRequest.class)))
+        Mockito.when(commentService.getEventComments(eq(2L), eq(0), eq(10)))
                 .thenReturn(List.of(commentDto()));
 
         mockMvc.perform(get("/events/{eventId}/comments", 2L)
@@ -45,7 +43,7 @@ class PublicCommentControllerTest {
 
     @Test
     void getEventComment_shouldReturnComment() throws Exception {
-        Mockito.when(commentService.getEventComment(eq(2L), eq(10L), any(HttpServletRequest.class)))
+        Mockito.when(commentService.getEventComment(eq(2L), eq(10L)))
                 .thenReturn(commentDto());
 
         mockMvc.perform(get("/events/{eventId}/comments/{commentId}", 2L, 10L))

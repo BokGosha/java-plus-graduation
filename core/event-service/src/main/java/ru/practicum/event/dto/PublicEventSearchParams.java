@@ -1,6 +1,5 @@
 package ru.practicum.event.dto;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.Builder;
 
 import java.util.List;
@@ -15,7 +14,6 @@ public record PublicEventSearchParams(
         Boolean onlyAvailable,
         String sort,
         int from,
-        int size,
-        HttpServletRequest request
+        int size
 ) {
 }

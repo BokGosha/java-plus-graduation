@@ -11,6 +11,12 @@ x-service-healthcheck: &service-healthcheck
   retries: 20
   start_period: 40s
 
+x-stats-service: &stats-service
+  restart: unless-stopped
+  environment: &stats-env
+    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+
 x-postgres: &postgres
   image: postgres:17
   restart: unless-stopped
@@ -25,10 +31,53 @@ x-postgres-healthcheck: &postgres-healthcheck
   retries: 10
 
 services:
+  kafka:
+    image: confluentinc/confluent-local:7.4.3
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092" # for client connections
+      - "9101:9101" # JMX
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      CLUSTER_ID: 'K0EA9p0yEe6MkAAAAkKsEg'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:29092 > /dev/null || exit 1" ]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+
+  kafka-init-topics:
+    image: confluentinc/confluent-local:7.4.3
+    container_name: kafka-init-topics
+    restart: "no"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: "bash -c \
+                'kafka-topics --create --topic stats.user-actions.v1 \
+                            --partitions 1 --replication-factor 1 --if-not-exists \
+                            --bootstrap-server kafka:29092 && \
+                kafka-topics --create --topic stats.events-similarity.v1 \
+                            --partitions 1 --replication-factor 1 --if-not-exists \
+                            --bootstrap-server kafka:29092'"
+    init: true
+
   discovery-server:
     build:
       context: .
       dockerfile: infra/discovery-server/Dockerfile
+    container_name: discovery-server
     restart: unless-stopped
     ports:
       - "8761:8761"
@@ -43,6 +92,7 @@ services:
     build:
       context: .
       dockerfile: infra/config-server/Dockerfile
+    container_name: config-server
     restart: unless-stopped
     ports:
       - "8888:8888"
@@ -62,6 +112,7 @@ services:
     build:
       context: .
       dockerfile: infra/gateway-server/Dockerfile
+    container_name: gateway-server
     restart: unless-stopped
     depends_on:
       discovery-server:
@@ -73,41 +124,79 @@ services:
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     healthcheck:
+      <<: *service-healthcheck
       test: [ "CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1" ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 40s
 
-  stats-server:
+  collector:
+    <<: *stats-service
     build:
       context: .
-      dockerfile: stats-service/stats-server/Dockerfile
-    restart: unless-stopped
+      dockerfile: stats-service/collector/Dockerfile
+    container_name: collector
     depends_on:
       discovery-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      stats-db:
+      kafka:
+        condition: service_healthy
+      kafka-init-topics:
+        condition: service_completed_successfully
+    healthcheck:
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8087/actuator/health || exit 1" ]
+
+
+
+  aggregator:
+    <<: *stats-service
+    build:
+      context: .
+      dockerfile: stats-service/aggregator/Dockerfile
+    container_name: aggregator
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init-topics:
+        condition: service_completed_successfully
+    healthcheck:
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8088/actuator/health || exit 1" ]
+
+  analyzer:
+    <<: *stats-service
+    build:
+      context: .
+      dockerfile: stats-service/analyzer/Dockerfile
+    container_name: analyzer
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init-topics:
+        condition: service_completed_successfully
+      analyzer-db:
         condition: service_healthy
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      <<: *stats-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://analyzer-db:5432/analyzer
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS http://localhost:9090/actuator/health || exit 1" ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 40s
+      <<: *service-healthcheck
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8089/actuator/health || exit 1" ]
 
   user-service:
     <<: *core-service
     build:
       context: .
       dockerfile: core/user-service/Dockerfile
+    container_name: user-service
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -127,6 +216,7 @@ services:
     build:
       context: .
       dockerfile: core/event-service/Dockerfile
+    container_name: event-service
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -146,6 +236,7 @@ services:
     build:
       context: .
       dockerfile: core/request-service/Dockerfile
+    container_name: request-service
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -165,6 +256,7 @@ services:
     build:
       context: .
       dockerfile: core/compilation-service/Dockerfile
+    container_name: compilation-service
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -184,6 +276,7 @@ services:
     build:
       context: .
       dockerfile: core/comment-service/Dockerfile
+    container_name: comment-service
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -198,21 +291,23 @@ services:
       <<: *service-healthcheck
       test: [ "CMD-SHELL", "curl -fsS http://localhost:8086/actuator/health || exit 1" ]
 
-  stats-db:
+  analyzer-db:
     <<: *postgres
+    container_name: analyzer-db
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       <<: *postgres-env
-      POSTGRES_DB: stats
+      POSTGRES_DB: analyzer
     volumes:
-      - stats-db-data:/var/lib/postgresql/data
+      - analyzer-db-data:/var/lib/postgresql/data
     healthcheck:
       <<: *postgres-healthcheck
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d stats" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d analyzer" ]
 
   user-db:
     <<: *postgres
+    container_name: user-db
     ports:
       - "5435:5432"
     environment:
@@ -226,6 +321,7 @@ services:
 
   event-db:
     <<: *postgres
+    container_name: event-db
     ports:
       - "5436:5432"
     environment:
@@ -239,6 +335,7 @@ services:
 
   request-db:
     <<: *postgres
+    container_name: request-db
     ports:
       - "5437:5432"
     environment:
@@ -252,6 +349,7 @@ services:
 
   compilation-db:
     <<: *postgres
+    container_name: compilation-db
     ports:
       - "5438:5432"
     environment:
@@ -265,6 +363,7 @@ services:
 
   comment-db:
     <<: *postgres
+    container_name: comment-db
     ports:
       - "5439:5432"
     environment:
@@ -277,7 +376,8 @@ services:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d comments" ]
 
 volumes:
-  stats-db-data:
+  kafka-data:
+  analyzer-db-data:
   user-db-data:
   event-db-data:
   request-db-data:

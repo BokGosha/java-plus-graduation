@@ -1,6 +1,5 @@
 package ru.practicum.comment.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
@@ -19,9 +18,9 @@ public interface CommentService {
 
     void deleteComment(Long userId, Long commentId);
 
-    List<CommentDto> getEventComments(Long eventId, int from, int size, HttpServletRequest request);
+    List<CommentDto> getEventComments(Long eventId, int from, int size);
 
-    CommentDto getEventComment(Long eventId, Long commentId, HttpServletRequest request);
+    CommentDto getEventComment(Long eventId, Long commentId);
 
     List<CommentDto> getComments(String status, int from, int size);
 

@@ -19,16 +19,16 @@ public interface EventMapper {
     @Mapping(target = "id", source = "event.id")
     @Mapping(target = "initiator", source = "initiator")
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
-    @Mapping(target = "views", source = "views")
+    @Mapping(target = "rating", source = "rating")
     @Mapping(target = "comments", source = "comments")
-    EventShortDto toShortDto(Event event, UserShortDto initiator, Long confirmedRequests, Long views, Long comments);
+    EventShortDto toShortDto(Event event, UserShortDto initiator, Long confirmedRequests, Double rating, Long comments);
 
     @Mapping(target = "id", source = "event.id")
     @Mapping(target = "initiator", source = "initiator")
     @Mapping(target = "confirmedRequests", source = "confirmedRequests")
-    @Mapping(target = "views", source = "views")
+    @Mapping(target = "rating", source = "rating")
     @Mapping(target = "comments", source = "comments")
-    EventFullDto toFullDto(Event event, UserShortDto initiator, Long confirmedRequests, Long views, Long comments);
+    EventFullDto toFullDto(Event event, UserShortDto initiator, Long confirmedRequests, Double rating, Long comments);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)

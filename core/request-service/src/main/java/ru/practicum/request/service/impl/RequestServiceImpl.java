@@ -19,6 +19,7 @@ import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.request.service.RequestService;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.stats.client.CollectorClient;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class RequestServiceImpl implements RequestService {
 
     private final UserClient userClient;
     private final EventClient eventClient;
+    private final CollectorClient collectorClient;
 
     @Override
     @Transactional
@@ -79,7 +81,16 @@ public class RequestServiceImpl implements RequestService {
                 .status(autoConfirm ? RequestStatus.CONFIRMED : RequestStatus.PENDING)
                 .build();
 
-        return requestMapper.toDto(requestRepository.save(request));
+        ParticipationRequestDto saved = requestMapper.toDto(requestRepository.save(request));
+
+        // Сбор статистики не должен ломать подачу заявки
+        try {
+            collectorClient.collectRegister(userId, eventId);
+        } catch (Exception e) {
+            log.warn("Не удалось отправить регистрацию в collector: {}", e.getMessage());
+        }
+
+        return saved;
     }
 
     @Override
@@ -193,6 +204,11 @@ public class RequestServiceImpl implements RequestService {
         }
 
         return new EventRequestStatusUpdateResult(confirmedList, rejectedList);
+    }
+
+    @Override
+    public boolean isRequestConfirmed(Long userId, Long eventId) {
+        return requestRepository.existsByEventIdAndRequesterIdAndStatus(eventId, userId, RequestStatus.CONFIRMED);
     }
 
     @Override

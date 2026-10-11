@@ -23,4 +23,6 @@ public interface RequestService {
                                                         EventRequestStatusUpdateRequest updateRequest);
 
     Map<Long, Long> getRequestsCountByEventIds(Collection<Long> eventIds, String status);
+
+    boolean isRequestConfirmed(Long userId, Long eventId);
 }
