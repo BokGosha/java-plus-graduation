@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 public class EventSimilarityState {
@@ -30,20 +29,6 @@ public class EventSimilarityState {
 
     public Map<Long, Double> getUserEvents(long userId) {
         return Map.copyOf(weightsByUser.getOrDefault(userId, Map.of()));
-    }
-
-    public Set<Long> getPairedEvents(long eventId) {
-        Map<Long, Double> greaterIds = minWeightsSums.getOrDefault(eventId, Map.of());
-        Set<Long> paired = new java.util.HashSet<>(greaterIds.keySet());
-
-        // Пары хранятся упорядоченными, поэтому мероприятия с меньшим id лежат во внешнем ключе
-        minWeightsSums.forEach((first, seconds) -> {
-            if (first < eventId && seconds.containsKey(eventId)) {
-                paired.add(first);
-            }
-        });
-
-        return paired;
     }
 
     public double getEventSum(long eventId) {

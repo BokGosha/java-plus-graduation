@@ -10,6 +10,7 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ public class EventSimilarityServiceImpl implements EventSimilarityService {
 
         updateMinSums(eventId, userId, weight, oldWeight);
 
-        return collectSimilarities(eventId, action.getTimestamp());
+        return collectSimilarities(eventId, userId, action.getTimestamp());
     }
 
     private void updateMinSums(long eventId, long userId, double weight, double oldWeight) {
@@ -59,12 +60,20 @@ public class EventSimilarityServiceImpl implements EventSimilarityService {
         }
     }
 
-    private List<EventSimilarityAvro> collectSimilarities(long eventId, Instant timestamp) {
+    private List<EventSimilarityAvro> collectSimilarities(long eventId, long userId, Instant timestamp) {
         List<EventSimilarityAvro> similarities = new ArrayList<>();
 
-        for (long otherId : state.getPairedEvents(eventId)) {
+        for (long otherId : state.getUserEvents(userId).keySet()) {
+            if (otherId == eventId) {
+                continue;
+            }
+
             similarities.add(toAvro(eventId, otherId, timestamp));
         }
+
+        similarities.sort(Comparator
+                .comparingLong(EventSimilarityAvro::getEventA)
+                .thenComparingLong(EventSimilarityAvro::getEventB));
 
         return similarities;
     }
