@@ -1,4 +1,4 @@
-package ru.practicum.ewm.stats.model;
+package ru.practicum.ewm.stats.collector.model;
 
 public enum ActionType {
 

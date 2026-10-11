@@ -1,6 +1,6 @@
-package ru.practicum.ewm.stats.service;
+package ru.practicum.ewm.stats.collector.service;
 
-import ru.practicum.ewm.stats.model.UserAction;
+import ru.practicum.ewm.stats.collector.model.UserAction;
 
 public interface UserActionService {
 

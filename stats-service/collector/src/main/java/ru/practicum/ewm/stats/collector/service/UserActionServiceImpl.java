@@ -1,13 +1,15 @@
-package ru.practicum.ewm.stats.service;
+package ru.practicum.ewm.stats.collector.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.stats.kafka.KafkaClient;
-import ru.practicum.ewm.stats.model.UserAction;
+import ru.practicum.ewm.stats.collector.kafka.KafkaClient;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
+import ru.practicum.ewm.stats.collector.mapper.UserActionMapper;
+import ru.practicum.ewm.stats.collector.model.UserAction;
 
 @Service
 @RequiredArgsConstructor
-public class UserActioNServiceImpl implements UserActionService {
+public class UserActionServiceImpl implements UserActionService {
 
     public static final String TOPIC = "stats.user-actions.v1";
 
@@ -16,6 +18,8 @@ public class UserActioNServiceImpl implements UserActionService {
 
     @Override
     public void collect(UserAction userAction) {
-        // Implementation for collecting user action
+        UserActionAvro userActionAvro = userActionMapper.mapUserAction(userAction);
+
+        kafkaClient.send(TOPIC, userAction.getTimestamp(), String.valueOf(userAction.getEventId()), userActionAvro);
     }
 }

@@ -1,4 +1,4 @@
-package ru.practicum.ewm.stats.kafka;
+package ru.practicum.ewm.stats.collector.kafka;
 
 import jakarta.annotation.PreDestroy;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -31,13 +32,13 @@ public class KafkaClientImpl implements KafkaClient {
     }
 
     @Override
-    public void send(String topic, String key, SpecificRecordBase message) {
-        if (producer == null) {
-            throw new IllegalStateException("Producer is not initialized!");
-        }
+    public void send(String topic, Instant timestamp, String key, SpecificRecordBase message) {
+        ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
+                topic, null, timestamp.toEpochMilli(), key, message
+        );
 
         try {
-            producer.send(new ProducerRecord<>(topic, key, message)).get();
+            producer.send(record).get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Kafka send interrupted", e);
@@ -48,9 +49,7 @@ public class KafkaClientImpl implements KafkaClient {
 
     @PreDestroy
     public void destroy() {
-        if (producer != null) {
-            producer.flush();
-            producer.close(Duration.ofSeconds(3));
-        }
+        producer.flush();
+        producer.close(Duration.ofSeconds(3));
     }
 }
