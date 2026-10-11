@@ -1,4 +1,18 @@
-FROM ubuntu:latest
-LABEL authors="MSI"
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+COPY . .
+
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -q -pl stats-service/aggregator -am package -DskipTests
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+COPY --from=build /app/stats-service/aggregator/target/*.jar app.jar
+
+EXPOSE 8088
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
