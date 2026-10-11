@@ -15,7 +15,7 @@ public record EventShortDto(
         UserShortDto initiator,
         Boolean paid,
         String title,
-        Long views,
+        Double rating,
         Long comments
 ) {
 }

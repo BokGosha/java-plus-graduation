@@ -15,4 +15,8 @@ public interface RequestClient {
     @GetMapping
     Map<Long, Long> getRequestsCountByEventIds(@RequestParam("eventIds") Collection<Long> eventIds,
                                                @RequestParam("status") String status);
+
+    // Проверка перед лайком: есть ли у пользователя подтверждённая заявка на мероприятие
+    @GetMapping("/confirmed")
+    boolean isRequestConfirmed(@RequestParam("userId") Long userId, @RequestParam("eventId") Long eventId);
 }

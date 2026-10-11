@@ -1,7 +1,7 @@
 package ru.practicum.event.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
@@ -29,8 +29,7 @@ public class PublicEventController {
             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size,
-            HttpServletRequest request
+            @RequestParam(defaultValue = "10") int size
     ) {
         PublicEventSearchParams params = PublicEventSearchParams.builder()
                 .text(text)
@@ -42,13 +41,28 @@ public class PublicEventController {
                 .sort(sort)
                 .from(from)
                 .size(size)
-                .request(request)
                 .build();
         return eventService.getPublicEvents(params);
     }
 
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getRecommendations(
+            @RequestHeader("X-EWM-USER-ID") long userId,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return eventService.getRecommendations(userId, size);
+    }
+
     @GetMapping("/{id}")
-    public EventFullDto getEvent(@PathVariable Long id, HttpServletRequest request) {
-        return eventService.getPublicEvent(id, request);
+    public EventFullDto getEvent(@PathVariable Long id,
+                                 @RequestHeader("X-EWM-USER-ID") long userId) {
+        return eventService.getPublicEvent(id, userId);
+    }
+
+    @PutMapping("/{eventId}/like")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void likeEvent(@PathVariable Long eventId,
+                          @RequestHeader("X-EWM-USER-ID") long userId) {
+        eventService.likeEvent(eventId, userId);
     }
 }
