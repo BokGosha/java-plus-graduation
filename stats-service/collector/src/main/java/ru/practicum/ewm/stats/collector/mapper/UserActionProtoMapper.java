@@ -17,7 +17,6 @@ public class UserActionProtoMapper {
         return UserAction.builder()
                 .userId(userActionProto.getUserId())
                 .eventId(userActionProto.getEventId())
-                .eventId(userActionProto.getEventId())
                 .actionType(mapActionType(userActionProto.getActionType()))
                 .timestamp(mapTimestamp(userActionProto.getTimestamp()))
                 .build();
@@ -28,7 +27,6 @@ public class UserActionProtoMapper {
             case ACTION_VIEW -> ActionType.VIEW;
             case ACTION_REGISTER -> ActionType.REGISTER;
             case ACTION_LIKE -> ActionType.LIKE;
-            // UNRECOGNIZED приходит, если клиент собран с более новой схемой
             case UNRECOGNIZED -> throw new IllegalArgumentException("Unknown action type: " + actionType);
         };
     }
