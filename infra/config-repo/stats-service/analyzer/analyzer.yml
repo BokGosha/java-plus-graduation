@@ -14,7 +14,7 @@ kafka:
 
   consumer-user-actions:
     group-id: ${KAFKA_CONSUMER_USER_ACTIONS_GROUP_ID:analyzer}
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
     value-deserializer: ru.practicum.ewm.stats.kafka.deserializer.UserActionAvroDeserializer
     poll-timeout-ms: 1000
 

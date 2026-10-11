@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 @Component
 public class KafkaClientImpl implements KafkaClient {
 
-    private final Producer<String, SpecificRecordBase> producer;
+    private final Producer<Long, SpecificRecordBase> producer;
 
     public KafkaClientImpl(@Value("${kafka.bootstrap-servers}") String bootstrapServers,
                            @Value("${kafka.producer.key-serializer}") String keySerializer,
@@ -32,8 +32,8 @@ public class KafkaClientImpl implements KafkaClient {
     }
 
     @Override
-    public void send(String topic, Instant timestamp, String key, SpecificRecordBase message) {
-        ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
+    public void send(String topic, Instant timestamp, Long key, SpecificRecordBase message) {
+        ProducerRecord<Long, SpecificRecordBase> record = new ProducerRecord<>(
                 topic, null, timestamp.toEpochMilli(), key, message
         );
 

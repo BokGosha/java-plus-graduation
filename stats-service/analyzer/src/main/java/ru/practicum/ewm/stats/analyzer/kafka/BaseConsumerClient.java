@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Properties;
 
 @Slf4j
-public abstract class BaseConsumerClient<T extends SpecificRecordBase> {
+public abstract class BaseConsumerClient<K, T extends SpecificRecordBase> {
 
-    private final Consumer<String, T> consumer;
+    private final Consumer<K, T> consumer;
 
     protected BaseConsumerClient(String bootstrapServers,
                                  String groupId,
@@ -38,7 +38,7 @@ public abstract class BaseConsumerClient<T extends SpecificRecordBase> {
         log.info("Подписались на топик {}", topic);
     }
 
-    public ConsumerRecords<String, T> poll(Duration timeout) {
+    public ConsumerRecords<K, T> poll(Duration timeout) {
         return consumer.poll(timeout);
     }
 

@@ -56,13 +56,13 @@ public class AggregationStarter {
             consumerClient.subscribe(userActionsTopic);
 
             while (running) {
-                ConsumerRecords<String, UserActionAvro> records = consumerClient.poll(Duration.ofMillis(pollTimeoutMs));
+                ConsumerRecords<Long, UserActionAvro> records = consumerClient.poll(Duration.ofMillis(pollTimeoutMs));
 
                 if (records.isEmpty()) {
                     continue;
                 }
 
-                for (ConsumerRecord<String, UserActionAvro> record : records) {
+                for (ConsumerRecord<Long, UserActionAvro> record : records) {
                     process(record.value());
                 }
 

@@ -62,21 +62,21 @@ public class AnalyzerStarter {
                 eventSimilarityService::save));
     }
 
-    private <T extends SpecificRecordBase> void consume(BaseConsumerClient<T> client,
-                                                        String topic,
-                                                        long pollTimeoutMs,
-                                                        Consumer<T> handler) {
+    private <K, T extends SpecificRecordBase> void consume(BaseConsumerClient<K, T> client,
+                                                          String topic,
+                                                          long pollTimeoutMs,
+                                                          Consumer<T> handler) {
         try {
             client.subscribe(topic);
 
             while (running) {
-                ConsumerRecords<String, T> records = client.poll(Duration.ofMillis(pollTimeoutMs));
+                ConsumerRecords<K, T> records = client.poll(Duration.ofMillis(pollTimeoutMs));
 
                 if (records.isEmpty()) {
                     continue;
                 }
 
-                for (ConsumerRecord<String, T> record : records) {
+                for (ConsumerRecord<K, T> record : records) {
                     handler.accept(record.value());
                 }
 
@@ -91,7 +91,7 @@ public class AnalyzerStarter {
         }
     }
 
-    private void commitQuietly(BaseConsumerClient<?> client, String topic) {
+    private void commitQuietly(BaseConsumerClient<?, ?> client, String topic) {
         try {
             client.commit();
         } catch (Exception e) {

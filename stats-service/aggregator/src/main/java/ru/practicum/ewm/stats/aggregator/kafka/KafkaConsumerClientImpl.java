@@ -18,7 +18,7 @@ import java.util.Properties;
 @Component
 public class KafkaConsumerClientImpl implements KafkaConsumerClient {
 
-    private final Consumer<String, UserActionAvro> consumer;
+    private final Consumer<Long, UserActionAvro> consumer;
 
     public KafkaConsumerClientImpl(@Value("${kafka.bootstrap-servers}") String bootstrapServers,
                                    @Value("${kafka.consumer.group-id}") String groupId,
@@ -43,7 +43,7 @@ public class KafkaConsumerClientImpl implements KafkaConsumerClient {
     }
 
     @Override
-    public ConsumerRecords<String, UserActionAvro> poll(Duration timeout) {
+    public ConsumerRecords<Long, UserActionAvro> poll(Duration timeout) {
         return consumer.poll(timeout);
     }
 

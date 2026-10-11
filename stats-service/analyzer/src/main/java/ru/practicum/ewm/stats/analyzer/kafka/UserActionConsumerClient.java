@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 @Component
-public class UserActionConsumerClient extends BaseConsumerClient<UserActionAvro> {
+public class UserActionConsumerClient extends BaseConsumerClient<Long, UserActionAvro> {
 
     public UserActionConsumerClient(
             @Value("${kafka.bootstrap-servers}") String bootstrapServers,

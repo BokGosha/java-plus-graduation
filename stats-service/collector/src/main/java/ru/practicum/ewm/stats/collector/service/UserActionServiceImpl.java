@@ -20,6 +20,6 @@ public class UserActionServiceImpl implements UserActionService {
     public void collect(UserAction userAction) {
         UserActionAvro userActionAvro = userActionMapper.mapUserAction(userAction);
 
-        kafkaClient.send(TOPIC, userAction.getTimestamp(), String.valueOf(userAction.getEventId()), userActionAvro);
+        kafkaClient.send(TOPIC, userAction.getTimestamp(), userAction.getEventId(), userActionAvro);
     }
 }

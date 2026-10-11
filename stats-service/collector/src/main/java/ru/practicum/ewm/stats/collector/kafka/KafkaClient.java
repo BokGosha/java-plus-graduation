@@ -6,5 +6,5 @@ import java.time.Instant;
 
 public interface KafkaClient {
 
-    void send(String topic, Instant timestamp, String key, SpecificRecordBase message);
+    void send(String topic, Instant timestamp, Long key, SpecificRecordBase message);
 }

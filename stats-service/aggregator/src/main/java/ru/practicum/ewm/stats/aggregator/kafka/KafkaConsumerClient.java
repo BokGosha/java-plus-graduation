@@ -9,7 +9,7 @@ public interface KafkaConsumerClient {
 
     void subscribe(String topic);
 
-    ConsumerRecords<String, UserActionAvro> poll(Duration timeout);
+    ConsumerRecords<Long, UserActionAvro> poll(Duration timeout);
 
     void commit();
 

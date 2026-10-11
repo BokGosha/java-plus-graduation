@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 
 @Component
-public class EventSimilarityConsumerClient extends BaseConsumerClient<EventSimilarityAvro> {
+public class EventSimilarityConsumerClient extends BaseConsumerClient<String, EventSimilarityAvro> {
 
     public EventSimilarityConsumerClient(
             @Value("${kafka.bootstrap-servers}") String bootstrapServers,
