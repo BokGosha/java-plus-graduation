@@ -30,5 +30,4 @@ spring:
 
 analyzer:
   recommendations:
-    # Сколько похожих мероприятий берём для предсказания оценки
     neighbours-count: ${ANALYZER_NEIGHBOURS_COUNT:5}

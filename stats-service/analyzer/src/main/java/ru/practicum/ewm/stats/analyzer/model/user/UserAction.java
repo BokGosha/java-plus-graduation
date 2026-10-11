@@ -14,9 +14,11 @@ import java.time.Instant;
 public class UserAction {
 
     @Id
+    @Column(name = "user_id")
     private Long userId;
 
     @Id
+    @Column(name = "event_id")
     private Long eventId;
 
     private Double weight;

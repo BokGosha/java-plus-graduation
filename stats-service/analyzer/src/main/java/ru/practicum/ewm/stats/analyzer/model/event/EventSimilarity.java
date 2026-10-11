@@ -14,9 +14,11 @@ import java.time.Instant;
 public class EventSimilarity {
 
     @Id
+    @Column(name = "event_a")
     private Long eventA;
 
     @Id
+    @Column(name = "event_b")
     private Long eventB;
 
     private Double score;
