@@ -1,6 +1,5 @@
 package ru.practicum.comment.service.impl;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +21,6 @@ import ru.practicum.comment.client.EventClient;
 import ru.practicum.comment.client.UserClient;
 import ru.practicum.comment.client.dto.EventInternalDto;
 import ru.practicum.comment.client.dto.UserShortDto;
-import ru.practicum.stats.client.StatsClient;
 import ru.practicum.comment.client.dto.EventState;
 
 import java.time.LocalDateTime;
@@ -44,7 +42,6 @@ public class CommentServiceImpl implements CommentService {
     private final UserClient userClient;
     private final EventClient eventClient;
 
-    private final StatsClient statsClient;
 
     @Override
     @Transactional
@@ -126,21 +123,17 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> getEventComments(Long eventId, int from, int size, HttpServletRequest request) {
+    public List<CommentDto> getEventComments(Long eventId, int from, int size) {
         checkEventExists(eventId);
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "created"));
 
-        List<CommentDto> comments = toDtos(commentRepository
+        return toDtos(commentRepository
                 .findByEventIdAndStatus(eventId, CommentStatus.PUBLISHED, pageable).getContent());
-
-        statsClient.hit(request);
-
-        return comments;
     }
 
     @Override
-    public CommentDto getEventComment(Long eventId, Long commentId, HttpServletRequest request) {
+    public CommentDto getEventComment(Long eventId, Long commentId) {
         Comment comment = commentRepository.findByIdAndEventId(commentId, eventId)
                 .orElseThrow(() ->
                         new NotFoundException("Comment with id=" + commentId + " was not found"));
@@ -148,8 +141,6 @@ public class CommentServiceImpl implements CommentService {
         if (comment.getStatus() != CommentStatus.PUBLISHED) {
             throw new NotFoundException("Comment with id=" + commentId + " was not found");
         }
-
-        statsClient.hit(request);
 
         return toDto(comment);
     }

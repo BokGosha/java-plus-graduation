@@ -1,6 +1,5 @@
 package ru.practicum.comment.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +23,17 @@ public class PublicCommentController {
     @GetMapping
     public List<CommentDto> getEventComments(@PathVariable Long eventId,
                                              @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                             @RequestParam(defaultValue = "10") @Positive int size,
-                                             HttpServletRequest request) {
+                                             @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("GET /events/{}/comments - from={}, size={}", eventId, from, size);
 
-        return commentService.getEventComments(eventId, from, size, request);
+        return commentService.getEventComments(eventId, from, size);
     }
 
     @GetMapping("/{commentId}")
     public CommentDto getEventComment(@PathVariable Long eventId,
-                                      @PathVariable Long commentId,
-                                      HttpServletRequest request) {
+                                      @PathVariable Long commentId) {
         log.info("GET /events/{}/comments/{}", eventId, commentId);
 
-        return commentService.getEventComment(eventId, commentId, request);
+        return commentService.getEventComment(eventId, commentId);
     }
 }
