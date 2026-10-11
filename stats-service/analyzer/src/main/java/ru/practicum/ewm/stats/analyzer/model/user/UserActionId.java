@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class UserId implements Serializable {
+public class UserActionId implements Serializable {
 
     private Long userId;
 

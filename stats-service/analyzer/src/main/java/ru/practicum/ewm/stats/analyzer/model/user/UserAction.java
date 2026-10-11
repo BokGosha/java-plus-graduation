@@ -1,20 +1,16 @@
-package ru.practicum.ewm.stats.analyzer.model;
+package ru.practicum.ewm.stats.analyzer.model.user;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 
 @Entity
 @Table(name = "user_actions")
 @Getter
 @Setter
-@IdClass(UserId.class)
+@IdClass(UserActionId.class)
 public class UserAction {
 
     @Id
@@ -23,7 +19,8 @@ public class UserAction {
     @Id
     private Long eventId;
 
-    private Double score;
+    private Double weight;
 
-    private Timestamp action_time;
+    @Column(name = "action_time")
+    private Instant actionTime;
 }

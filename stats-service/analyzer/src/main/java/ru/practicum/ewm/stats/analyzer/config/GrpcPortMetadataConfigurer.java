@@ -1,4 +1,4 @@
-package ru.practicum.ewm.stats.collector.config;
+package ru.practicum.ewm.stats.analyzer.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
